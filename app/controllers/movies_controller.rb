@@ -11,18 +11,19 @@ class MoviesController < ApplicationController
   end
 
   def index
-    # sorting
-    @all_ratings =  ['G','PG','PG-13','R']
-    @sort = params[:sort] || session[:sort] # This keeps :sort alive even if query is made
-    @check_ratings = params[:ratings] || session[:ratings]
+    @all_ratings = Movie.all_ratings
+    @sort = params[:sort]||session[:sort]
+    session[:ratings] = session[:ratings]||{'G'=>'', 'PG'=>'', 'PG-13'=>'', 'R'=>''}
+    @t_param = params[:ratings] || session[:ratings]
     session[:sort] = @sort
-    session[:ratings] = @check_ratings
-
-    @movies = Movie.order @sort
-    if @check_ratings
-      @movies = Movie.where(:rating => @check_ratings.keys).order @sort
+    session[:ratings] = @t_param
+    @movies = Movie.where(rating: session[:ratings].keys).order(session[:sort])
+    if (params[:sort].nil? and !(session[:sort].nil?)) or (params[:ratings].nil? and !(session[:ratings].nil?))
+      flash.keep
+      redirect_to movies_path(sort: session[:sort], ratings: session[:ratings])
     end
   end
+
 
   def new
     # default: render 'new' template
